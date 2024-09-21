@@ -1,21 +1,48 @@
-import { GazinScraper } from "./src/web-scraper/gazin.js";
-import { MercadoLivreScraper } from "./src/web-scraper/mercado-livre.js";
-import { AmazonScraper } from "./src/web-scraper/amazon.js";
+import express from 'express';
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
+import { GazinScraper } from './src/web-scraper/gazin.js';
+import { MercadoLivreScraper } from './src/web-scraper/mercado-livre.js';
+import { AmazonScraper } from './src/web-scraper/amazon.js';
+import { engine } from 'express-handlebars';
 
-const PRODUTO_NOME = "Pneu aro 14";
+const app = express();
+const httpServer = createServer(app);
+const wss = new WebSocketServer({ server: httpServer });
 
-async function main(){
-    console.info("Iniciando busca de produtos...");
-    const [ gazinProduto, produtoMercadoLivre, amazonProduto ] = await Promise.all([
-        GazinScraper(PRODUTO_NOME),
-        MercadoLivreScraper(PRODUTO_NOME),
-        AmazonScraper(PRODUTO_NOME)
-    ]);
-    
+app.engine('handlebars', engine({
+    layoutsDir: './src/views',
+    defaultLayout: 'home'
+}));
+app.set('view engine', 'handlebars');
+app.set('views', './src/views');
 
-    console.debug({ gazinProduto });
-    console.debug({ produtoMercadoLivre });
-    console.debug({ amazonProduto });
-}
+app.get('/', (req, res) => {
+    res.render('home');
+});
 
-main();
+
+wss.on('connection', (ws) => {
+    console.log('Cliente conectado');
+
+    ws.on('message', async (message) => {
+        const produtoNome = message.toString();
+        console.info(`Buscando produto: ${produtoNome}`);
+
+        const scrapers = [
+            { name: 'Mercado livre', scraper: MercadoLivreScraper },
+            { name: 'Amazon', scraper: AmazonScraper },
+            { name: 'Gazin', scraper: GazinScraper },
+        ];
+
+        scrapers.forEach(async ({ name, scraper }) => {
+            const resultado = await scraper(produtoNome);
+            ws.send(JSON.stringify({ source: name, data: resultado }));
+        });
+    });
+});
+
+const PORT = 3000;
+httpServer.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+});

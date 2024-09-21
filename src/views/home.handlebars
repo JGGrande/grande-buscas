@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grande Buscas</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+        input[type="text"] {
+            width: 50%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        #resultados {
+            margin-top: 20px;
+            width: 50%;
+        }
+        .produto {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .produto .nome-produto {
+            max-width: 300px; /* Limita a largura do nome do produto */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .produto img {
+            max-width: 100px;
+            max-height: 100px;
+            object-fit: contain;
+            margin-right: 20px;
+        }
+        .produto p {
+            margin: 0;
+        }
+        .loading {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: #007bff;
+            display: flex;
+            align-items: center;
+        }
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 4px solid #ccc;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Grande Buscas</h1>
+    <input type="text" id="produtoNome" placeholder="Digite o nome do produto">
+    <button id="buscar">Buscar</button>
+
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        Buscando...
+    </div>
+    <div id="resultados"></div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:3000');
+        const resultadosDiv = document.getElementById('resultados');
+        const loadingDiv = document.getElementById('loading');
+
+        let produtosCount = 0;
+
+        ws.onmessage = (event) => {
+            produtosCount++;
+
+            const resultado = JSON.parse(event.data);
+
+            const maximoDeResultados = 3;
+            if(produtosCount === maximoDeResultados){
+                loadingDiv.style.display = 'none';
+            }
+
+            const produtoDiv = document.createElement('div');
+            produtoDiv.classList.add('produto');
+
+            if(resultado.data !== null){
+                const imagemProduto = resultado.data.imagem ? resultado.data.imagem : 'https://via.placeholder.com/100'; // Coloca uma imagem placeholder se não houver imagem
+
+                produtoDiv.innerHTML = `
+                    <img src="${imagemProduto}" alt="Imagem do produto">
+                    <div>
+                        <p><strong>${resultado.source}:</strong></p>
+                        <p>${resultado.data.nome}</p>
+                        <p>Preço: R$ <strong>${resultado.data.preco}</strong></p>
+                    </div>
+                `;
+            }else {
+                produtoDiv.innerHTML = `
+                    <p><strong>${resultado.source}:</strong></p>
+                    <p>Não foi possível carregar o produto!</p>
+                `;
+            }
+
+            resultadosDiv.appendChild(produtoDiv);
+        };
+
+        document.getElementById('buscar').onclick = () => {
+            const produtoNome = document.getElementById('produtoNome').value;
+            resultadosDiv.innerHTML = ''; // Limpa os resultados anteriores
+            loadingDiv.style.display = 'flex'; // Exibe o "loading"
+            ws.send(produtoNome);
+        };
+    </script>
+</body>
+</html>

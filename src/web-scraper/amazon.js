@@ -16,7 +16,7 @@ export async function AmazonScraper(nomeProduto){
         });
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36');
 
-        await page.goto(`https://www.amazon.com.br`, { waitUntil: "networkidle2" });
+        await page.goto(`https://www.amazon.com.br`);
     
         await page.type('#twotabsearchtextbox', nomeProduto);
     
@@ -40,6 +40,9 @@ export async function AmazonScraper(nomeProduto){
             produto.avaliacao = null;
         }
     
+        const produtoImage = await page.$('#search > div.s-desktop-width-max.s-desktop-content.s-opposite-dir.s-wide-grid-style.sg-row > div.sg-col-20-of-24.s-matching-dir.sg-col-16-of-20.sg-col.sg-col-8-of-12.sg-col-12-of-16 > div > span.rush-component.s-latency-cf-section > div.s-main-slot.s-result-list.s-search-results.sg-row > div:nth-child(10) > div > div > span > div > div > div.s-product-image-container.aok-relative.s-text-center.s-image-overlay-grey.puis-image-overlay-grey.s-padding-left-small.s-padding-right-small.puis-spacing-small.s-height-equalized.puis.puis-v1sj507ube2hyf2kkl8hoa32q6h > span > a > div > img');
+        produto.imagem = await produtoImage.evaluate(element => element.src);
+
         await page.close();
         await browser.close();
     

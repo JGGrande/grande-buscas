@@ -11,7 +11,7 @@ export async function MercadoLivreScraper(nomeProduto){
     const page = await browser.newPage();
 
     try {
-        await page.goto(`https://www.mercadolivre.com.br`, { waitUntil: "networkidle2" });
+        await page.goto(`https://www.mercadolivre.com.br`);
     
         await page.type('#cb1-edit', nomeProduto);
     
@@ -32,6 +32,9 @@ export async function MercadoLivreScraper(nomeProduto){
         if(avaliacaoElement){
             produto.avaliacao = await avaliacaoElement.evaluate(element => element.innerText);
         }
+
+        const produtoImage = await page.$('::-p-xpath(/html/body/main/div/div[3]/section/ol/li[2]/div/div/div[1]/section/div[2]/div/div/div/img)');
+        produto.imagem = await produtoImage.evaluate(element => element.src);
 
         await page.close();
         await browser.close();
