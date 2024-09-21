@@ -4,31 +4,48 @@ export async function GazinScraper(produtoNome){
     const browser = await puppeteer.launch({
         headless: true,
         defaultViewport: null,
-        args: ["--no-sandbox"]
+        args: ["--no-sandbox", "--window-size=1920,1080"]
     });
 
     const page = await browser.newPage();
 
-    await page.goto(`https://www.gazin.com.br/busca/${produtoNome}`);
+    try {
+        await page.goto(`https://www.gazin.com.br/busca/${produtoNome}`, { waitUntil: "domcontentloaded" });
 
-    await new Promise(resolve => setTimeout(resolve, 30000));
+        const produto = { }
 
-    const produto = { }
+        const produtoNomeElement = await page.waitForSelector('::-p-xpath(/html/body/div[1]/div[2]/main/div[2]/div/div/div/div/div[2]/div[4]/a[1]/div/div/div[2]/div[1]/span[1])');
 
-    const produtoNomeElement = await page.waitForSelector('::-p-xpath(/html/body/div[1]/div[2]/main/div[2]/div/div/div[2]/div[3]/a[1]/div/div/div[2]/div[1]/span[1])');
+        produto.nome = await produtoNomeElement.evaluate(element => element.innerText);
 
-    produto.nome = await produtoNomeElement.evaluate(element => element.innerText);
+        const produtoPrecoElement = await page.$('::-p-xpath(/html/body/div[1]/div[2]/main/div[2]/div/div/div/div/div[2]/div[4]/a[1]/div/div/div[2]/div[2]/div[1]/div[1]/p)');
 
-    const produtoPrecoElement = await page.$('::-p-xpath(/html/body/div[1]/div[2]/main/div[2]/div/div/div[2]/div[3]/a[1]/div/div/div[2]/div[2]/div[2]/div/span/span)');
+        produto.preco = await produtoPrecoElement.evaluate(element => 
+            Number(element.innerText.replace("R$", "").replace(",", ".").trim())
+        );
 
-    produto.preco = await produtoPrecoElement.evaluate(element => 
-        Number(element.innerText.replace("R$", "").replace(",", ".").trim())
-    );
+        produto.avaliacao = null;
 
-    produto.avaliacao = null;
+        await page.close();
+        await browser.close();
 
-    await page.close();
-    await browser.close();
+        return produto;
 
-    return produto;
+    }catch(error){
+        console.error(error);
+
+        const { NODE_ENV } = process.env;
+
+        if(NODE_ENV === "dev"){
+            const imageName = `gazin-${Date.now()}.png`
+            const errorImagePath = path.join("src", "bugs_images", imageName);
+    
+            await page.screenshot({ path: errorImagePath });
+        }
+
+        await page.close();
+        await browser.close();
+
+        return null;
+    }
 }
