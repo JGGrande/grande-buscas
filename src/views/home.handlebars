@@ -101,8 +101,8 @@
 
     <script>
         const ws = new WebSocket('ws://localhost:3000');
-        const resultadosDiv = document.getElementById('resultados');
-        const loadingDiv = document.getElementById('loading');
+        const resultadosDiv = document.querySelector('#resultados');
+        const loadingDiv = document.querySelector('#loading');
 
         let produtosCount = 0;
 

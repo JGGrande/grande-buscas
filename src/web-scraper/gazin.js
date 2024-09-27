@@ -11,7 +11,7 @@ export async function GazinScraper(produtoNome){
     const page = await browser.newPage();
 
     try {
-        await page.goto(`https://www.gazin.com.br/busca/${produtoNome}`);
+        await page.goto(`https://www.gazin.com.br/busca/${produtoNome}`, { waitUntil: "domcontentloaded" });
 
         const produto = { }
 
