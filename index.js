@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
@@ -21,8 +23,9 @@ app.set('view engine', 'handlebars');
 app.set('views', './src/views');
 
 app.get('/', (req, res) => {
+    const protocol = req.secure ? 'wss' : 'ws';
     const host = req.get('host');
-    const wsUrl = `ws://${host}`;
+    const wsUrl = `${protocol}://${host}`;
 
     res.render('home', { wsUrl });
 });
