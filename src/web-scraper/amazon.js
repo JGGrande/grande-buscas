@@ -4,7 +4,8 @@ import { sleep } from "../utils/async.js";
 
 export async function AmazonScraper(nomeProduto){
     const browser = await puppeteer.launch({
-        headless: true,
+        channel: "chrome",
+        headless: "shell",
         defaultViewport: null,
         args: ["--no-sandbox", "--window-size=1920,1080", "--disable-dev-shm-usage"]
     });
