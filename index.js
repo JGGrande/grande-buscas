@@ -23,13 +23,12 @@ app.set('view engine', 'handlebars');
 app.set('views', './src/views');
 
 app.get('/', (req, res) => {
-    const protocol = req.secure ? 'wss' : 'ws';
+    const protocol = req.headers['x-forwarded-proto'] === 'https' ? 'wss' : 'ws';
     const host = req.get('host');
     const wsUrl = `${protocol}://${host}`;
 
     res.render('home', { wsUrl });
 });
-
 
 wss.on('connection', (ws) => {
     console.log('Cliente conectado');
