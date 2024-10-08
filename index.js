@@ -6,6 +6,8 @@ import { MercadoLivreScraper } from './src/web-scraper/mercado-livre.js';
 import { AmazonScraper } from './src/web-scraper/amazon.js';
 import { engine } from 'express-handlebars';
 
+const PORT = process.env.PORT || 3000;
+
 const app = express();
 const httpServer = createServer(app);
 const wss = new WebSocketServer({ server: httpServer });
@@ -14,11 +16,15 @@ app.engine('handlebars', engine({
     layoutsDir: './src/views',
     defaultLayout: 'home'
 }));
+
 app.set('view engine', 'handlebars');
 app.set('views', './src/views');
 
 app.get('/', (req, res) => {
-    res.render('home');
+    const host = req.get('host');
+    const wsUrl = `ws://${host}`;
+
+    res.render('home', { wsUrl });
 });
 
 
@@ -37,12 +43,22 @@ wss.on('connection', (ws) => {
 
         scrapers.forEach(async ({ name, scraper }) => {
             const resultado = await scraper(produtoNome);
-            ws.send(JSON.stringify({ source: name, data: resultado }));
+            
+            if (resultado){
+                const message = {
+                    source: name,
+                    data: resultado
+                }
+
+                const messageString = JSON.stringify(message);
+
+                ws.send(messageString);
+            }
         });
     });
 });
 
-const PORT = 3000;
+
 httpServer.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });

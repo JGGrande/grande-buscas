@@ -105,22 +105,17 @@
     <div id="resultados"></div>
 
     <script>
-        const ws = new WebSocket('ws://localhost:3000');
+        const ws = new WebSocket('{{ wsUrl }}');
         const resultadosDiv = document.querySelector('#resultados');
         const loadingDiv = document.querySelector('#loading');
 
         let produtosCount = 0;
 
         ws.onmessage = (event) => {
-            produtosCount++;
-
             const resultado = JSON.parse(event.data);
 
-            const maximoDeResultados = 3;
-            if(produtosCount === maximoDeResultados){
-                loadingDiv.style.display = 'none';
-            }
-
+            loadingDiv.style.display = 'none';
+           
             const produtoDiv = document.createElement('div');
             produtoDiv.classList.add('produto');
 
@@ -134,11 +129,6 @@
                         <p>${resultado.data.nome}</p>
                         <p>Preço: R$ <strong>${resultado.data.preco}</strong></p>
                     </div>
-                `;
-            }else {
-                produtoDiv.innerHTML = `
-                    <p><strong>${resultado.source}:</strong></p>
-                    <p>Não foi possível carregar o produto!</p>
                 `;
             }
 
