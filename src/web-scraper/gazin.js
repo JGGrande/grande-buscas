@@ -37,11 +37,10 @@ export async function GazinScraper(produtoNome){
         return produto;
 
     }catch(error){
-        console.error(error);
-
         const { NODE_ENV } = process.env;
-
+        
         if(NODE_ENV === "dev"){
+            console.error(error);
             const imageName = `gazin-${Date.now()}.png`
             const errorImagePath = path.join("src", "bugs_images", imageName);
     

@@ -42,11 +42,10 @@ export async function MercadoLivreScraper(nomeProduto){
     
         return produto;
     }catch(error){
-        console.error(error);
-
         const { NODE_ENV } = process.env;
-
+        
         if(NODE_ENV === "dev"){
+            console.error(error);
             const imageName = `mercado-livre-${Date.now()}.png`
             const errorImagePath = path.join("src", "bugs_images", imageName);
     
